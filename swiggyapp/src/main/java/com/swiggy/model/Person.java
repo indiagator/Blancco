@@ -5,10 +5,20 @@ public class Person implements LivingThing{
       protected String name;
      protected String phone;
 
+     private Location location;
+
     public Person(String name, String phone)
     {
         this.name = name;
         this.phone = phone;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
     }
 
     public String getName() {

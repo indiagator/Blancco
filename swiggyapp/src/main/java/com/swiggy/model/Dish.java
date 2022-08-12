@@ -37,4 +37,8 @@ public  class Dish {
     public int getType() {
         return type;
     }
+
+    public String getRestroName() {
+        return restroName;
+    }
 }

@@ -3,9 +3,9 @@ package com.swiggy.model;
 public  class Customer extends Person implements User, KYC, LivingThing// Inherits from [Object and Person] Class
 {
 
-    public Customer(String custName, String phone) // Overloaded Constructor
+    public Customer(String name, String phone) // Overloaded Constructor
     {
-        super(custName, phone);
+        super(name, phone);
 
         super.getName();
     }
