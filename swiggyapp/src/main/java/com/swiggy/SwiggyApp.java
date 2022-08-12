@@ -30,7 +30,7 @@ public class SwiggyApp
     {
         this.restaurants = new Restaurant[3]; // limits the max number of restaurants
         this.dishes = new Dish[15]; // max 5 dishes per Restaurant
-        this.locations = new Location[3];
+        this.locations = new Location[3]; // max 3 Locations
 
         try
         {
@@ -48,9 +48,10 @@ public class SwiggyApp
             this.fileLocationPath = p3.toAbsolutePath();
             in_location = Files.newBufferedReader(this.fileLocationPath);
 
-            parseRestaurantData();
             parseDishData();
             parseLocationData();
+            parseRestaurantData();
+
         }
         catch (IOException|NullPointerException|ArrayIndexOutOfBoundsException e)
         {
@@ -83,11 +84,15 @@ public class SwiggyApp
                 Dish[] tempMenu = new Dish[5];
                 Location tempLocation = null;
 
+                int tempMenuCntr = 0;
                 for(int j = 0; j<15; j++) // parse dishes.array
                 {
+
+
                     if(this.dishes[j].getRestroName().equals(line))
                     {
-                        tempMenu[j] = this.dishes[j];
+                        tempMenu[tempMenuCntr] = this.dishes[j];
+                        tempMenuCntr++;
                     }
 
                 }
@@ -147,54 +152,37 @@ public class SwiggyApp
     private void search(SwiggyApp myApp)
     {
         System.out.println("\n You chose Search");
+
+        //Search Logic goes here
     }
 
 
 
     private void browse(SwiggyApp myApp)
     {
-
         System.out.println("\n You chose Browse ");
         // System.out.println(myApp.in_restaurant.readLine());
 
         for (int i = 0; i < 3; i++) // Basic Loop to Process all Restros
         {
+            System.out.println(myApp.restaurants[i].getName()+"'s MENU below | will be delivered in "+myApp.calcDelTime(myApp.getCustomer().getLocation(),myApp.restaurants[i].getLocation() )+" Minutes");
 
-            System.out.println(myApp.restaurants[i].getName()+"'s MENU below | will be delivered in "+myApp.calcDelTime(myApp.getCustomer().getLocation(),myApp.restaurants[i].getLocation() ));
-
-            for(int j = 0; j <15 ; j++)
+            for(int j = 0; j <5 ; j++) // Inner Loop to process the Dishes of the Restro
             {
-                try
+                if(myApp.restaurants[i].getMenu()[j] != null)
                 {
-                    Dish tempDish = myApp.dishes[j];
-                    String tempType = "";
+                    Dish tempDish = myApp.restaurants[i].getMenu()[j];
+
+                    System.out.print(tempDish.getName()+" ");
+                    System.out.print("INR"+tempDish.getPrice()+" ");
 
                     if(tempDish.getType() == 0)
-                    {
-                     tempType = "Veg";
-                    }
-                    else if (tempDish.getType() == 1)
-                    {
-                        tempType = "Non Veg";
-                    }
-
-                    if ((tempDish.getRestroName()).equals(restaurants[i].getName())) {
-                        System.out.println(tempDish.getName()+" INR:"+tempDish.getPrice()+" "+tempType);
-                    }
-                }
-                catch (NullPointerException e)
-                {
-                    break;
+                    {System.out.print("Veg \n");}
+                    else if (tempDish.getType() == 1) {System.out.print("Non Veg \n");}
                 }
             }
-
             System.out.println("******");
-
-
         }
-
-
-
     }
 
     private double calcDelTime( Location custLocation, Location restroLocation)
