@@ -10,7 +10,9 @@ import java.nio.Buffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 public class SwiggyApp
 {
@@ -19,18 +21,25 @@ public class SwiggyApp
     private Path fileRestaurantPath;
     private Path fileDishPath;
     private Path fileLocationPath;
-    private Restaurant[] restaurants;
-    private Dish[] dishes;
-    private Location[] locations;
+
+    //private Restaurant[] restaurants;
+    private Set<Restaurant> restaurantSet;
+
+    //private Dish[] dishes;
+    private Set<Dish> dishSet;
+
+    //private Location[] locations;
+    private Set<Location> locationSet;
+
     private BufferedReader in_restaurant;
     private BufferedReader in_dish;
     private BufferedReader in_location;
 
     SwiggyApp() // throw's' keyword means passing the buck --- delegating it to someone else
     {
-        this.restaurants = new Restaurant[3]; // limits the max number of restaurants
-        this.dishes = new Dish[15]; // max 5 dishes per Restaurant
-        this.locations = new Location[3]; // max 3 Locations
+        this.restaurantSet = new HashSet<>();
+        this.dishSet = new HashSet<>();
+        this.locationSet = new HashSet<>();
 
         try
         {
@@ -74,39 +83,56 @@ public class SwiggyApp
     private void parseRestaurantData() throws IOException {
 
 
-        for(int i=0; i<3;i++)
+        while (true)
         {
             String line = in_restaurant.readLine();
             if(!(line==null)) // Menu Data and Location have to be set right here
             {
-                this.restaurants[i] = new Restaurant(line); // line is the name of the restaurant
 
-                Dish[] tempMenu = new Dish[5];
+                //Dish[] tempMenu = new Dish[5];
+                Set<Dish> tempMenu = new HashSet<>();
                 Location tempLocation = null;
 
-                int tempMenuCntr = 0;
-                for(int j = 0; j<15; j++) // parse dishes.array
+               // int tempMenuCntr = 0;
+                //for(int j = 0; j < this.dishSet.size() ; j++) // parse dishes.array
+                //{
+
+                  //  if(this.dishes[j].getRestroName().equals(line))
+                  //  {
+                  //      tempMenu[tempMenuCntr] = this.dishes[j];
+                  //      tempMenuCntr++;
+                    //}
+
+                //}
+
+                for(Dish dish : this.dishSet) // simplified For loop when you wis to iterate over te wole list or set
                 {
-
-
-                    if(this.dishes[j].getRestroName().equals(line))
+                    if(dish.getRestroName().equals(line))
                     {
-                        tempMenu[tempMenuCntr] = this.dishes[j];
-                        tempMenuCntr++;
+                        tempMenu.add(dish);
                     }
-
                 }
 
-                for(int k = 0; k<3; k++) // parse locations array
+
+
+               // for(int k = 0; k<3; k++) // parse locations array
+               // {
+                 //   if(this.locations[k].getName().equals(line))
+                 //   {
+                 //       tempLocation = this.locations[k];
+                 //   }
+               // }
+
+                for ( Location location : this.locationSet)
                 {
-                    if(this.locations[k].getName().equals(line))
+                    if(location.getName().equals(line))
                     {
-                        tempLocation = this.locations[k];
+                        tempLocation = location; break;
                     }
                 }
 
-                this.restaurants[i].setMenu(tempMenu);
-                this.restaurants[i].setLocation(tempLocation);
+                
+                this.restaurantSet.add(new Restaurant(line, tempMenu, tempLocation)) ; // line is the name of the restaurant
 
             }
             else {break;}
@@ -117,35 +143,31 @@ public class SwiggyApp
 
     private void parseDishData() throws IOException {
 
-        for(int i=0; i<15;i++)
+        while (true)
         {
             String line = in_dish.readLine();
             if(!(line==null))
             {
-
                 String[] tempDishData = line.split(",");
-                this.dishes[i] = new Dish(tempDishData[1], (Integer.valueOf(tempDishData[2])).intValue(),tempDishData[0], (Integer.valueOf(tempDishData[3])).intValue()); // line is the name of the restaurant
+                this.dishSet.add(new Dish(tempDishData[1], (Integer.valueOf(tempDishData[2])).intValue(),tempDishData[0], (Integer.valueOf(tempDishData[3])).intValue())) ; // line is the name of the restaurant
             }
             else {break;}
-
         }
     }
 
     private void parseLocationData() throws IOException
     {
 
-        for(int i=0; i<3;i++)
+       while(true)
         {
             String line = in_location.readLine();
             if(!(line==null))
             {
                 String[] tempLocation = line.split(",");
-                this.locations[i] = new Location(tempLocation[0], (Integer.valueOf(tempLocation[1])).intValue(), (Integer.valueOf(tempLocation[2])).intValue()); // line is the name of the restaurant
+                this.locationSet.add(new Location(tempLocation[0], (Integer.valueOf(tempLocation[1])).intValue(), (Integer.valueOf(tempLocation[2])).intValue())); // line is the name of the restaurant
             }
             else {break;}
-
         }
-
 
     }
 
@@ -161,28 +183,65 @@ public class SwiggyApp
     private void browse(SwiggyApp myApp)
     {
         System.out.println("\n You chose Browse ");
-        // System.out.println(myApp.in_restaurant.readLine());
-
-        for (int i = 0; i < 3; i++) // Basic Loop to Process all Restros
+        int restroCounter = 1;
+        for (Restaurant restro : myApp.restaurantSet)
         {
-            System.out.println(myApp.restaurants[i].getName()+"'s MENU below | will be delivered in "+myApp.calcDelTime(myApp.getCustomer().getLocation(),myApp.restaurants[i].getLocation() )+" Minutes");
+            System.out.println("******");
 
-            for(int j = 0; j <5 ; j++) // Inner Loop to process the Dishes of the Restro
+            System.out.println(restroCounter+". "+restro.getName()+"'s MENU below | will be delivered in "+myApp.calcDelTime(myApp.getCustomer().getLocation(),restro.getLocation() )+" Minutes");
+
+            System.out.println("**MENU**");
+
+            int dishCounter = 1;
+            for( Dish dish : restro.getMenu())
             {
-                if(myApp.restaurants[i].getMenu()[j] != null)
-                {
-                    Dish tempDish = myApp.restaurants[i].getMenu()[j];
+                System.out.print(dishCounter+". "+dish.getName()+" ");
+                System.out.print("INR"+dish.getPrice()+" ");
+                if(dish.getType() == 0)
+                {System.out.print("Veg \n");}
+                else if (dish.getType() == 1) {System.out.print("Non Veg \n");}
 
-                    System.out.print(tempDish.getName()+" ");
-                    System.out.print("INR"+tempDish.getPrice()+" ");
-
-                    if(tempDish.getType() == 0)
-                    {System.out.print("Veg \n");}
-                    else if (tempDish.getType() == 1) {System.out.print("Non Veg \n");}
-                }
+                dishCounter++;
             }
             System.out.println("******");
+            restroCounter++;
         }
+
+
+        // System.out.println(myApp.in_restaurant.readLine());
+
+        //for (int i = 0; i < 3; i++) // Basic Loop to Process all Restros
+       // {
+        //    System.out.println(myApp.restaurants[i].getName()+"'s MENU below | will be delivered in "+myApp.calcDelTime(myApp.getCustomer().getLocation(),myApp.restaurants[i].getLocation() )+" Minutes");
+
+        //    for(int j = 0; j <5 ; j++) // Inner Loop to process the Dishes of the Restro
+         //   {
+          //      if(myApp.restaurants[i].getMenu()[j] != null)
+           //     {
+          //          Dish tempDish = myApp.restaurants[i].getMenu()[j];
+
+          //          System.out.print(tempDish.getName()+" ");
+           //         System.out.print("INR"+tempDish.getPrice()+" ");
+
+           //         if(tempDish.getType() == 0)
+           //         {System.out.print("Veg \n");}
+             //       else if (tempDish.getType() == 1) {System.out.print("Non Veg \n");}
+             //   }
+           // }
+          //  System.out.println("******");
+       // }
+
+    }
+
+    public void chooseDishes()
+    {
+
+        Scanner console_in = new Scanner(System.in);
+        String user_choice_1 = "";
+
+        System.out.print("Please choose the Restraunt and the Dish in this format -> (Restaurant,Dish) for ex (3,4) :");
+        user_choice_1 = console_in.next();
+
     }
 
     private double calcDelTime( Location custLocation, Location restroLocation)
@@ -244,6 +303,8 @@ public class SwiggyApp
         }
 
         }while( ! ((user_choice_1 == 1) || (user_choice_1 == 2)) );
+
+        myApp.chooseDishes();
 
     }
 
