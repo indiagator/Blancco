@@ -1,5 +1,7 @@
 package concurrency;
 
+import concurrency.TestData;
+
 public class TestThread  implements Runnable{
 
     private String name;
@@ -20,6 +22,8 @@ public class TestThread  implements Runnable{
     {
 
         TestData testData = new TestData();
+
+        System.out.println(testData);
 
         TestThread testThread_2 = new TestThread("SECOND THREAD", 3000,null,testData);
         Thread myThread_2= new Thread(testThread_2);

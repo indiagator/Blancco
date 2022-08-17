@@ -1,6 +1,5 @@
 package concurrency;
 
-import javax.xml.transform.Templates;
 
 public class TestData {
 
@@ -38,14 +37,14 @@ public class TestData {
     public String toString() 
     {
 
-        String tenpString = " ";
+        StringBuilder tenpString = new StringBuilder();
 
         for(int i = 0; i <5 ; i++)
         {
-            tenpString = tenpString + this.testDataArray[i] + " ";
+            tenpString.append(this.testDataArray[i]+" ") ;
         }
 
-        return tenpString;
+        return  tenpString.toString();
     }
     
 }
