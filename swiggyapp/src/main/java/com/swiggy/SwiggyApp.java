@@ -10,9 +10,8 @@ import java.nio.Buffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SwiggyApp
 {
@@ -35,11 +34,14 @@ public class SwiggyApp
     private BufferedReader in_dish;
     private BufferedReader in_location;
 
+    private Map<Integer, Restaurant> restroMap;
+
     SwiggyApp() // throw's' keyword means passing the buck --- delegating it to someone else
     {
         this.restaurantSet = new HashSet<>();
         this.dishSet = new HashSet<>();
         this.locationSet = new HashSet<>();
+        this.restroMap = new HashMap<>();
 
         try
         {
@@ -89,11 +91,42 @@ public class SwiggyApp
             if(!(line==null)) // Menu Data and Location have to be set right here
             {
 
-                //Dish[] tempMenu = new Dish[5];
-                Set<Dish> tempMenu = new HashSet<>();
-                Location tempLocation = null;
+                Map<Integer, Dish> tempDishMap  = new HashMap<>();
 
-               // int tempMenuCntr = 0;
+                int  dishCounter = 1;
+                for( Dish dish : this.dishSet)
+                {
+                    if(dish.getRestroName().equals(line))
+                    {
+                        tempDishMap.put(new Integer(dishCounter), dish);
+                        dishCounter++;
+
+                    }
+
+
+                }
+
+
+                this.restaurantSet.add
+                        (
+                                new Restaurant(
+                                        line,
+                                        tempDishMap,
+                        this.locationSet.stream().filter(location -> location.getName().equals(line)).collect(Collectors.toList()).get(0))
+                        ) ; // line is the name of the restaurant
+
+
+                //Dish[] tempMenu = new Dish[5];
+
+                //Set<Dish> tempMenu = new HashSet<>();
+                //List<Location> tempLocation = new ArrayList<>();
+
+               // tempMenu = this.dishSet.stream().filter(dish -> dish.getRestroName().equals(line)).collect(Collectors.toSet());
+               // tempLocation = this.locationSet.stream().filter(location -> location.getName().equals(line)).collect(Collectors.toList());
+
+
+
+                // int tempMenuCntr = 0;
                 //for(int j = 0; j < this.dishSet.size() ; j++) // parse dishes.array
                 //{
 
@@ -105,13 +138,13 @@ public class SwiggyApp
 
                 //}
 
-                for(Dish dish : this.dishSet) // simplified For loop when you wis to iterate over te wole list or set
-                {
-                    if(dish.getRestroName().equals(line))
-                    {
-                        tempMenu.add(dish);
-                    }
-                }
+               // for(Dish dish : this.dishSet) // simplified For loop when you wis to iterate over te wole list or set
+              //  {
+               //     if(dish.getRestroName().equals(line))
+               //     {
+                //        tempMenu.add(dish);
+                //    }
+               // }
 
 
 
@@ -123,16 +156,15 @@ public class SwiggyApp
                  //   }
                // }
 
-                for ( Location location : this.locationSet)
-                {
-                    if(location.getName().equals(line))
-                    {
-                        tempLocation = location; break;
-                    }
-                }
+               // for ( Location location : this.locationSet)
+                //{
+                 //   if(location.getName().equals(line))
+                  //  {
+                  //      tempLocation = location; break;
+                   // }
+               // }
 
-                
-                this.restaurantSet.add(new Restaurant(line, tempMenu, tempLocation)) ; // line is the name of the restaurant
+
 
             }
             else {break;}
@@ -188,21 +220,35 @@ public class SwiggyApp
         {
             System.out.println("******");
 
+
+            restroMap.put(new Integer(restroCounter), restro);
             System.out.println(restroCounter+". "+restro.getName()+"'s MENU below | will be delivered in "+myApp.calcDelTime(myApp.getCustomer().getLocation(),restro.getLocation() )+" Minutes");
 
             System.out.println("**MENU**");
 
             int dishCounter = 1;
-            for( Dish dish : restro.getMenu())
-            {
-                System.out.print(dishCounter+". "+dish.getName()+" ");
-                System.out.print("INR"+dish.getPrice()+" ");
-                if(dish.getType() == 0)
-                {System.out.print("Veg \n");}
-                else if (dish.getType() == 1) {System.out.print("Non Veg \n");}
 
-                dishCounter++;
+           // for( Dish dish : restro.getMenu())
+           // {
+            //    System.out.print("    "+dishCounter+". "+dish.getName()+" ");
+            //    System.out.print("INR"+dish.getPrice()+" ");
+            //    if(dish.getType() == 0)
+             //   {System.out.print("Veg \n");}
+             //   else if (dish.getType() == 1) {System.out.print("Non Veg \n");}
+
+             //   dishCounter++;
+           // }
+
+            for (int i = 1; i < (restro.getMenu().size()+1);i++ )
+            {
+                System.out.print("    "+i+". "+restro.getMenu().get(new Integer(i)).getName()+" ");
+                System.out.print("INR"+restro.getMenu().get(new Integer(i)).getPrice()+" ");
+                if(restro.getMenu().get(new Integer(i)).getType() == 0)
+                {System.out.print("Veg \n");}
+                else if (restro.getMenu().get(new Integer(i)).getType() == 1) {System.out.print("Non Veg \n");}
+
             }
+
             System.out.println("******");
             restroCounter++;
         }
@@ -239,18 +285,30 @@ public class SwiggyApp
         Scanner console_in = new Scanner(System.in);
         String user_choice_1 = "";
 
-        System.out.print("Please choose the Restraunt and the Dish in this format -> (Restaurant,Dish) for ex (3,4) :");
+        System.out.print("Please choose the Restaurant and the Dish in this format -> (Restaurant,Dish1,Dis2,Dish3...) for ex (3,4,2,1) :");
         user_choice_1 = console_in.next();
+
+        String[] indexes = user_choice_1.split(",");
+
+        System.out.println("You Chose :"+ this.restroMap.get(Integer.valueOf(indexes[0])).getName());
+
+        for(String dishIndexString : indexes)
+        {
+            if(Integer.valueOf(dishIndexString).intValue() != 0)
+            System.out.println("You Chose :"+ this.restroMap.get(Integer.valueOf(indexes[0])).getMenu().get(Integer.valueOf(dishIndexString)).getName() );
+        }
+
+
 
     }
 
-    private double calcDelTime( Location custLocation, Location restroLocation)
+    private int calcDelTime( Location custLocation, Location restroLocation)
     {
         double defSpeed = 10.0; // units/min
 
         double distance = Math.sqrt((custLocation.getLat()-restroLocation.getLat())*(custLocation.getLat()-restroLocation.getLat()) + (custLocation.getLongi() - restroLocation.getLongi())*(custLocation.getLongi() - restroLocation.getLongi()));
 
-        return distance/defSpeed; // time taken in Minutes
+        return ((Double)(distance/defSpeed)).intValue(); // time taken in Minutes
     }
 
 

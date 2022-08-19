@@ -1,6 +1,8 @@
 package com.swiggy.model;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class Restaurant
@@ -9,16 +11,16 @@ public class Restaurant
     private Location location;
    // private Dish[] menu;
 
-    private Set<Dish> menu;
+    private Map<Integer, Dish> menu;
 
     public Restaurant(String name)
     {
         this.name = name;
         //this.menu = new Dish[5];
-        menu = new HashSet<>(); // unlimited dishes
+        menu = new HashMap<>(); // unlimited dishes
     }
 
-    public Restaurant(String name, Set<Dish> menu, Location location)
+    public Restaurant(String name, Map<Integer, Dish> menu, Location location)
     {
         this.name = name;
         this.menu = menu;
@@ -37,11 +39,11 @@ public class Restaurant
         this.location = location;
     }
 
-    public void setMenu(Set<Dish> menu) {
+    public void setMenu(Map<Integer, Dish> menu) {
         this.menu = menu;
     }
 
-    public Set<Dish> getMenu() {
+    public Map<Integer,Dish> getMenu() {
         return menu;
     }
 }
