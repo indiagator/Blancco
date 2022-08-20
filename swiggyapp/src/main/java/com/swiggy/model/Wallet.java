@@ -1,6 +1,8 @@
 package com.swiggy.model;
 
- public class Wallet {
+import com.swiggy.exceptions.InsufficientFundsException;
+
+public class Wallet {
 
      int balance; // uninitialized
 
@@ -9,8 +11,24 @@ package com.swiggy.model;
         this.balance = balanceParam;
     }
 
-    public void setBalance(int balance) {
-        this.balance = balance;
+    public int updateBalance(int updateValue)
+    {
+       this.balance += updateValue;
+       return this.balance;
+    }
+
+    public boolean deductPayment(int paymentValue) throws InsufficientFundsException {
+
+        if(this.balance >= paymentValue)
+        {
+            this.balance -= paymentValue;
+            return true;
+        }
+        else
+        {
+            throw new InsufficientFundsException();
+        }
+
     }
 
     public int getBalance() {

@@ -8,7 +8,7 @@ public class LivingThingBuilder
 
         if(lvtype.equals("customer")) // this is an example of a design pattern
         {
-            lv = new Customer("default","default");
+            lv = new Customer("default","default","","");
         }
         else if (lvtype.equals("person"))
         {

@@ -1,6 +1,8 @@
 package com.swiggy;
 
+import com.swiggy.database.DbConnection;
 import com.swiggy.exceptions.IncorrectMainArgumentException;
+import com.swiggy.exceptions.InsufficientFundsException;
 import com.swiggy.model.*;
 import javafx.scene.transform.Scale;
 
@@ -10,16 +12,23 @@ import java.nio.Buffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SwiggyApp
 {
 
+    private Set<Customer> customerSet;
     private Customer customer;
     private Path fileRestaurantPath;
     private Path fileDishPath;
     private Path fileLocationPath;
+
+    private Path fileCustomerPath;
 
     //private Restaurant[] restaurants;
     private Set<Restaurant> restaurantSet;
@@ -34,7 +43,15 @@ public class SwiggyApp
     private BufferedReader in_dish;
     private BufferedReader in_location;
 
+    private BufferedReader in_customer;
+
     private Map<Integer, Restaurant> restroMap;
+
+    private String[] indexes; // holds the Order Indexes
+
+    private Order order;
+
+
 
     SwiggyApp() // throw's' keyword means passing the buck --- delegating it to someone else
     {
@@ -42,6 +59,7 @@ public class SwiggyApp
         this.dishSet = new HashSet<>();
         this.locationSet = new HashSet<>();
         this.restroMap = new HashMap<>();
+        this.customerSet = new HashSet<>();
 
         try
         {
@@ -59,6 +77,11 @@ public class SwiggyApp
             this.fileLocationPath = p3.toAbsolutePath();
             in_location = Files.newBufferedReader(this.fileLocationPath);
 
+            Path p4 = Paths.get("D:\\SOftware Dev and Training Material\\Blancco\\swiggyapp\\src\\main\\resources\\customer.csv");
+            this.fileCustomerPath = p4.toAbsolutePath();
+            in_customer = Files.newBufferedReader(this.fileCustomerPath);
+
+            parseCustomerData();
             parseDishData();
             parseLocationData();
             parseRestaurantData();
@@ -80,6 +103,10 @@ public class SwiggyApp
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
+    }
+
+    public Order getOrder() {
+        return order;
     }
 
     private void parseRestaurantData() throws IOException {
@@ -203,6 +230,20 @@ public class SwiggyApp
 
     }
 
+    private void parseCustomerData() throws IOException {
+        while(true)
+        {
+            String line = in_customer.readLine();
+            if(!(line==null))
+            {
+                String[] tempCustomer = line.split(",");
+                this.customerSet.add (new Customer(tempCustomer[0],tempCustomer[3],tempCustomer[2] ,tempCustomer[1] )); // line is the name of the restaurant
+            }
+            else {break;}
+        }
+
+    }
+
     private void search(SwiggyApp myApp)
     {
         System.out.println("\n You chose Search");
@@ -285,19 +326,116 @@ public class SwiggyApp
         Scanner console_in = new Scanner(System.in);
         String user_choice_1 = "";
 
-        System.out.print("Please choose the Restaurant and the Dish in this format -> (Restaurant,Dish1,Dis2,Dish3...) for ex (3,4,2,1) :");
+        System.out.print("Please choose the Restaurant and the Dish in this format -> (Restaurant,Dish1,Qty1,Dish2,Qty2,Dish3,Qty3...) for ex (3,4,2,1) :");
         user_choice_1 = console_in.next();
 
-        String[] indexes = user_choice_1.split(",");
+        this.indexes = user_choice_1.split(","); // This is where the Order is being Created | First index holds the Restro and others hold the dishes
 
-        System.out.println("You Chose :"+ this.restroMap.get(Integer.valueOf(indexes[0])).getName());
+        Restaurant restro = this.restroMap.get(Integer.valueOf(this.indexes[0]));
 
+        System.out.println("You Chose Restro:"+ restro.getName());
+
+        this.order = new Order(this.customer, restro.getName());
+
+        Map<Dish, Integer> tempDishMap = new HashMap<>();
+
+
+        boolean firstIterationFlag = false;
+        boolean dishQtyFlag = false;
+        Dish tempDish = null;
         for(String dishIndexString : indexes)
         {
-            if(Integer.valueOf(dishIndexString).intValue() != 0)
-            System.out.println("You Chose :"+ this.restroMap.get(Integer.valueOf(indexes[0])).getMenu().get(Integer.valueOf(dishIndexString)).getName() );
+
+
+            if(firstIterationFlag == true)
+            {
+
+
+                if(dishQtyFlag == false) // this block will be executed for odd index values which are the dish references
+                {
+                       tempDish = restro.getMenu().get(Integer.valueOf(dishIndexString));
+                       dishQtyFlag = true;
+                }
+                else if (firstIterationFlag == true) // this block will be executed for even index values which are the quantities
+                {
+                    tempDishMap.put(tempDish,Integer.valueOf(dishIndexString));
+                    System.out.println("You Chose: "+dishIndexString+" Units of:"+ tempDish.getName() );
+                    dishQtyFlag = false;
+
+                }
+               // System.out.println("You Chose Dish:"+ restro.getMenu().get(Integer.valueOf(dishIndexString)).getName() );
+
+
+            }
+
+            firstIterationFlag = true;
         }
 
+        this.order.setDishMap(tempDishMap);
+
+    }
+
+    public void confirmOrder()
+    {
+        System.out.println("Do you wish to make a payment of INR"+this.getOrder().getOrderAmnt()+" for this order? (yes/no)");
+
+        Scanner console_in = new Scanner(System.in);
+        String user_choice_1 = console_in.next();
+
+        if(user_choice_1.equals("yes"))
+        {
+
+            try
+            {
+                this.getCustomer().getWallet().deductPayment(this.getOrder().getOrderAmnt());
+
+                System.out.println("Your updated Wallet Balance is INR"+this.getCustomer().getWallet().getBalance());
+                Restaurant restro = this.restaurantSet.stream().filter(restaurant -> restaurant.getName().equals(this.getOrder().getRestroName()) ).findFirst().get();
+                System.out.println("Your Order is Confirmed and will be delivered in "+this.calcDelTime(this.getCustomer().getLocation(),restro.getLocation() )+" Minutes");
+
+
+            }
+            catch (InsufficientFundsException e)
+            {
+                System.out.println(e.getMessage());
+
+                System.out.println("Do you wish to update Wallet Balance ? (yes/no)" );
+                Scanner console_in_1 = new Scanner(System.in);
+                String user_choice_2 = console_in_1.next();
+
+                if(user_choice_2.equals("yes"))
+                {
+                    this.updateWalletBalance();
+                    this.confirmOrder(); // recursion
+
+                }
+                else
+                {
+                    System.out.println("Your Order is Deleted!");
+                    this.order.setStatusDeleted();
+                }
+
+            }
+
+        }
+        else if (user_choice_1.equals("no"))
+        {
+            System.out.println("Your Order is Deleted!");
+            this.order.setStatusDeleted();
+        }
+
+
+    }
+
+    public void updateWalletBalance()
+    {
+        System.out.print("Please enter Recharge Amount: ");
+        Scanner console_in = new Scanner(System.in);
+        String user_choice_1 = console_in.next();
+
+        int updatedBalance = this.getCustomer().getWallet().updateBalance(Integer.valueOf(user_choice_1));
+
+        System.out.println("Your Updated Balance is : "+this.getCustomer().getWallet().getBalance());
 
 
     }
@@ -311,16 +449,69 @@ public class SwiggyApp
         return ((Double)(distance/defSpeed)).intValue(); // time taken in Minutes
     }
 
-
-    public static void main(String... args)  //main method which is the Entry Point
+    private void testDbConnect() throws SQLException
     {
+        Connection dbconnection = (new DbConnection()).getDbconnection();
+
+        if (dbconnection.isValid(0))
+        {
+            System.out.println("Connection Established");
+        }
+
+        String query = "SELECT * FROM customer";
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try
+        {
+            statement = dbconnection.createStatement();
+            resultSet = statement.executeQuery(query);
+
+            while(resultSet.next())
+            {
+                String s1 = (resultSet.getString(1));
+                String s2 = (resultSet.getString(2));
+
+                System.out.print(s1+" ");
+                System.out.println(s2);
+
+                // System.out.println("Welcome to Swiggy "+resultSet.getString(2)+"! Your current registered phonenumber is "+resultSet.getString(1));
+
+            }
+        }
+        catch(SQLException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String... args) throws SQLException   //main method which is the Entry Point
+    {
+
+
+
          // local variable declaration
             Scanner console_in = new Scanner(System.in);
             int user_choice_1 = 0;
 
+
+
         SwiggyApp myApp = new SwiggyApp(); // Constructor for Swiggy App
 
-        Customer customer1 = new Customer("Hemant","9876344214");
+        //myApp.testDbConnect();
+
+        System.out.print("USERNAME");
+        Scanner console_in_username = new Scanner(System.in);
+        String username = console_in_username.next();
+
+        if (myApp.customerSet.contains(username))
+        {
+            System.out.println("Password Please");
+        }
+
+
+
+        Customer customer1 = new Customer("Hemant","9876344214","jldshfljsd","sdgfsgf");
         customer1.setLocation(new Location(customer1.getName(),675,908));
         myApp.setCustomer(customer1);
 
@@ -364,6 +555,8 @@ public class SwiggyApp
 
         myApp.chooseDishes();
 
+        myApp.confirmOrder(); // Make Payment
+
     }
 
     public void justAnotherMethod()
@@ -388,8 +581,8 @@ public class SwiggyApp
         Person personNew = new Person("Pratibha", "897731339");
 
 
-        Person person1 = new Customer("Tushar", "7865432123");
-        System.out.println(person1);
+        //Person person1 = new Customer("Tushar", "7865432123");
+        //System.out.println(person1);
 
         System.out.println("******************");
 
@@ -416,11 +609,11 @@ public class SwiggyApp
         //myWallet.setBalance(1000);
 
         System.out.println("Value of Local Variable i before increment is : "+i);
-        System.out.println("Value returned from Increment Method is : "+payment.incrementInt(i));
+        //System.out.println("Value returned from Increment Method is : "+payment.incrementInt(i));
         System.out.println("Value of Local Variable i after increment is : "+i);
 
         System.out.println("Wallet Balance before Increment is :" + myWallet.getBalance());
-        System.out.println(" Balance returned from the increment Method  is :" + payment.incrementWalletBalance(myWallet).getBalance());
+        //System.out.println(" Balance returned from the increment Method  is :" + payment.incrementWalletBalance(myWallet).getBalance());
         System.out.println("Wallet Balance after Increment is :" + myWallet.getBalance());
 
         System.out.println("******************");

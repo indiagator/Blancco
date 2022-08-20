@@ -2,7 +2,7 @@ package com.swiggy.model;
 
 public class Person implements LivingThing{
 
-      protected String name;
+    protected String name;
      protected String phone;
 
      private Location location;
