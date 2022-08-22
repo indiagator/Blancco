@@ -46,5 +46,17 @@ public class Restaurant
     public Map<Integer,Dish> getMenu() {
         return menu;
     }
+
+    public void printMenu() {
+
+        for (int i = 1; i < (this.getMenu().size()+1);i++ )
+        {
+            System.out.print("    "+i+". "+this.getMenu().get(new Integer(i)).getName()+" ");
+            System.out.print("INR"+this.getMenu().get(new Integer(i)).getPrice()+" ");
+            if(this.getMenu().get(new Integer(i)).getType() == 0)
+            {System.out.print("Veg \n");}
+            else if (this.getMenu().get(new Integer(i)).getType() == 1) {System.out.print("Non Veg \n");}
+        }
+    }
 }
 

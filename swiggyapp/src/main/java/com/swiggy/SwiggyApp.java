@@ -17,6 +17,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class SwiggyApp
@@ -97,8 +101,24 @@ public class SwiggyApp
         }
     }
 
+    public Set<Restaurant> getRestaurantSet() {
+        return restaurantSet;
+    }
+
+    public Map<Integer, Restaurant> getRestroMap() {
+        return restroMap;
+    }
+
+    public Set<Customer> getCustomerSet() {
+        return customerSet;
+    }
+
+    public Set<Dish> getDishSet() {
+        return this.dishSet;
+    }
+
     public Customer getCustomer() {
-        return customer;
+        return this.customer;
     }
 
     public void setCustomer(Customer customer) {
@@ -129,7 +149,6 @@ public class SwiggyApp
                         dishCounter++;
 
                     }
-
 
                 }
 
@@ -236,8 +255,11 @@ public class SwiggyApp
             String line = in_customer.readLine();
             if(!(line==null))
             {
-                String[] tempCustomer = line.split(",");
-                this.customerSet.add (new Customer(tempCustomer[0],tempCustomer[3],tempCustomer[2] ,tempCustomer[1] )); // line is the name of the restaurant
+                String[] tempCustomerData = line.split(",");
+                Customer tempCustomer = new Customer(tempCustomerData[0],tempCustomerData[3],tempCustomerData[2] ,tempCustomerData[1] );
+                tempCustomer.setLocation(new Location(tempCustomer.getName(), Integer.valueOf(tempCustomerData[4]) , Integer.valueOf(tempCustomerData[5]).intValue() ));
+
+                this.customerSet.add (tempCustomer); // line is the name of the restaurant
             }
             else {break;}
         }
@@ -247,6 +269,51 @@ public class SwiggyApp
     private void search(SwiggyApp myApp)
     {
         System.out.println("\n You chose Search");
+        System.out.println("*****");
+
+        System.out.print("What are you thinking about?: ");
+        Scanner console_in = new Scanner(System.in);
+        String userSearchString = console_in.next();
+
+
+        Function<String, Predicate<Dish>> findPatternFunction =
+
+                searchString -> {
+                    Pattern pattern  = Pattern.compile(searchString);
+
+                    Predicate<Dish> checkDish =
+                            dish -> {
+                                Matcher matcher = pattern.matcher(dish.getName());
+                                return matcher.find();
+
+                            };
+
+                    return checkDish;
+                };
+
+        Set<Dish> searchDishSet = myApp.getDishSet().stream().filter(findPatternFunction.apply(userSearchString)).collect(Collectors.toSet());
+        //searchDishSet.forEach (dish -> System.out.println (dish.getName() ) );
+
+        int restroCounter = 1;
+        for(Dish dish : searchDishSet)
+        {
+            if(!myApp.getRestroMap().values().stream().anyMatch(restro -> restro.getName().equals(dish.getRestroName())))
+            {
+                myApp.getRestroMap().put(Integer.valueOf(restroCounter), myApp.getRestaurantSet().stream().filter(restro -> restro.getName().equals(dish.getRestroName())).findAny().get());
+                restroCounter++;
+            }
+        }
+
+        myApp.getRestroMap().entrySet().forEach(entry ->
+                                                    {
+                                                        System.out.println(entry.getKey().intValue()+". "+entry.getValue().getName());
+                                                        entry.getValue().printMenu();
+                                                    } );
+
+
+
+
+
 
         //Search Logic goes here
     }
@@ -262,12 +329,12 @@ public class SwiggyApp
             System.out.println("******");
 
 
-            restroMap.put(new Integer(restroCounter), restro);
+            this.restroMap.put(new Integer(restroCounter), restro);
             System.out.println(restroCounter+". "+restro.getName()+"'s MENU below | will be delivered in "+myApp.calcDelTime(myApp.getCustomer().getLocation(),restro.getLocation() )+" Minutes");
 
             System.out.println("**MENU**");
 
-            int dishCounter = 1;
+            //int dishCounter = 1;
 
            // for( Dish dish : restro.getMenu())
            // {
@@ -280,15 +347,7 @@ public class SwiggyApp
              //   dishCounter++;
            // }
 
-            for (int i = 1; i < (restro.getMenu().size()+1);i++ )
-            {
-                System.out.print("    "+i+". "+restro.getMenu().get(new Integer(i)).getName()+" ");
-                System.out.print("INR"+restro.getMenu().get(new Integer(i)).getPrice()+" ");
-                if(restro.getMenu().get(new Integer(i)).getType() == 0)
-                {System.out.print("Veg \n");}
-                else if (restro.getMenu().get(new Integer(i)).getType() == 1) {System.out.print("Non Veg \n");}
-
-            }
+            restro.printMenu();
 
             System.out.println("******");
             restroCounter++;
@@ -449,7 +508,7 @@ public class SwiggyApp
         return ((Double)(distance/defSpeed)).intValue(); // time taken in Minutes
     }
 
-    private void testDbConnect() throws SQLException
+    private static void testDbConnect() throws SQLException
     {
         Connection dbconnection = (new DbConnection()).getDbconnection();
 
@@ -467,13 +526,15 @@ public class SwiggyApp
             statement = dbconnection.createStatement();
             resultSet = statement.executeQuery(query);
 
+
+
             while(resultSet.next())
             {
-                String s1 = (resultSet.getString(1));
-                String s2 = (resultSet.getString(2));
+                String phonenumber = (resultSet.getString(1)); // Database Schema is actually shared with the Developer
+                String name = (resultSet.getString(2));
 
-                System.out.print(s1+" ");
-                System.out.println(s2);
+                System.out.print(phonenumber+" ");
+                System.out.println(name);
 
                 // System.out.println("Welcome to Swiggy "+resultSet.getString(2)+"! Your current registered phonenumber is "+resultSet.getString(1));
 
@@ -483,79 +544,118 @@ public class SwiggyApp
         {
             e.printStackTrace();
         }
+
+        dbconnection.close();
+
     }
+
+    private void authenticateCustomer(SwiggyApp myApp) throws SQLException {
+
+        System.out.print("USERNAME: ");
+        Scanner console_in_username = new Scanner(System.in);
+        String username = console_in_username.next();
+
+
+        Optional<Customer> optionalCustomer = this.getCustomerSet().stream().filter(customer1 -> customer1.getUsername().equals(username)).findAny();
+        Customer tempCustomer = null;
+
+        if(optionalCustomer.isPresent())
+        {
+            System.out.print("PASSWORD: ");
+
+            tempCustomer = optionalCustomer.get();
+            Scanner console_in_password = new Scanner(System.in);
+            String password = console_in_password.next();
+
+            if(tempCustomer.getPassword().equals(password))
+            {
+                myApp.setCustomer(tempCustomer);
+                myApp.exploreApp();
+            }
+            else
+            {
+                System.out.println("Incorrect Password!");
+                SwiggyApp.initApp();
+            }
+        }
+        else
+        {
+            System.out.println("Invalid Username | Please SignUp!");
+
+            //Invoke the Signup Method!
+            SwiggyApp.initApp();
+        }
+
+    }
+
+    private void exploreApp()
+    {
+
+        // local variable declaration
+        Scanner console_in = new Scanner(System.in);
+        int user_choice_1 = 0;
+        do
+        {
+
+            try{
+                System.out.print("How do you want to Order today (1. Search 2. Browse) :");
+
+                user_choice_1 = console_in.nextInt();
+
+                if (user_choice_1 == 1) //SEARCH
+                {
+                    this.search(this);
+                }
+                else if (user_choice_1 == 2)  //BROWSE
+                {
+                    this.browse(this);
+                }
+                else
+                {
+                    //System.out.println("\n Incorrect Option , Correct Options: 1/2 ");
+                    throw new IncorrectMainArgumentException();
+
+                }
+            }catch (IncorrectMainArgumentException e)
+            {
+                System.out.println(e.getMessage());
+                // System.out.println(e.getCause());
+                // System.out.println(e.getStackTrace().toString());
+            }
+            finally
+            {
+                //System.out.println("This is the Finally Block of the Main Argument try block");
+            }
+
+        }while( ! ((user_choice_1 == 1) || (user_choice_1 == 2)) );
+    }
+
+     public static void initApp() throws SQLException {
+
+         SwiggyApp myApp = new SwiggyApp(); // Constructor for Swiggy App
+
+
+         //Customer customer1 = new Customer("Hemant","9876344214","jldshfljsd","sdgfsgf");
+         //customer1.setLocation(new Location(customer1.getName(),675,908));
+        // myApp.setCustomer(customer1);
+
+         myApp.authenticateCustomer(myApp);
+
+         myApp.chooseDishes();
+
+         myApp.confirmOrder(); // Make Payment
+
+     }
 
     public static void main(String... args) throws SQLException   //main method which is the Entry Point
     {
 
-
-
-         // local variable declaration
-            Scanner console_in = new Scanner(System.in);
-            int user_choice_1 = 0;
-
-
-
-        SwiggyApp myApp = new SwiggyApp(); // Constructor for Swiggy App
-
-        //myApp.testDbConnect();
-
-        System.out.print("USERNAME");
-        Scanner console_in_username = new Scanner(System.in);
-        String username = console_in_username.next();
-
-        if (myApp.customerSet.contains(username))
-        {
-            System.out.println("Password Please");
-        }
-
-
-
-        Customer customer1 = new Customer("Hemant","9876344214","jldshfljsd","sdgfsgf");
-        customer1.setLocation(new Location(customer1.getName(),675,908));
-        myApp.setCustomer(customer1);
+        //testDbConnect();
 
         System.out.println("Welcome to Swiggy!" );
 
+        SwiggyApp.initApp();
 
-        do
-        {
-
-        try{
-            System.out.print("How do you want to Order today (1. Search 2. Browse) :");
-
-            user_choice_1 = console_in.nextInt();
-
-            if (user_choice_1 == 1) //SEARCH
-            {
-                myApp.search(myApp);
-            }
-            else if (user_choice_1 == 2)  //BROWSE
-            {
-                myApp.browse(myApp);
-            }
-            else
-            {
-                //System.out.println("\n Incorrect Option , Correct Options: 1/2 ");
-                throw new IncorrectMainArgumentException();
-
-            }
-        }catch (IncorrectMainArgumentException e)
-        {
-            System.out.println(e.getMessage());
-           // System.out.println(e.getCause());
-           // System.out.println(e.getStackTrace().toString());
-        }
-        finally
-        {
-            //System.out.println("This is the Finally Block of the Main Argument try block");
-        }
-
-        }while( ! ((user_choice_1 == 1) || (user_choice_1 == 2)) );
-
-        myApp.chooseDishes();
-
-        myApp.confirmOrder(); // Make Payment
 
     }
 
