@@ -1,4 +1,4 @@
-package com.testblancco.testblancco;
+package com.tradeblancco.controller;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;

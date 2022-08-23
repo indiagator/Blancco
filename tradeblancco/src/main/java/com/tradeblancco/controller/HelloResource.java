@@ -1,4 +1,4 @@
-package com.testblancco.testblancco;
+package com.tradeblancco.controller;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
