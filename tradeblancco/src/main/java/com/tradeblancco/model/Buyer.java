@@ -1,30 +1,10 @@
 package com.tradeblancco.model;
 
-public class Buyer
+public class Buyer extends User
 {
-    private String phonenumber;
-    private String name;
-
-    public Buyer(String phonenumber, String name)
+    public Buyer(String username, String fullname, String phonenumber)
     {
-
-        this.phonenumber = phonenumber;
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getPhonenumber() {
-        return phonenumber;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPhonenumber(String phonenumber) {
-        this.phonenumber = phonenumber;
+        super(username, fullname, phonenumber,"buyer");
+        //super.setType("buyer");
     }
 }

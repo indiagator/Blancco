@@ -36,6 +36,8 @@ public class Calculator extends HttpServlet {
 
         float result = 0.0f;
 
+        String operation = getServletConfig().getInitParameter("defaultOperation");
+
         if(request.getParameter("operation").equals("sum"))
         {
             result = add(num1,num2);
@@ -63,6 +65,8 @@ public class Calculator extends HttpServlet {
 
         RequestDispatcher view = request.getRequestDispatcher("calculator.jsp");
         view.forward(request, response);
+
+
 
     }
 

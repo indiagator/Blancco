@@ -3,4 +3,71 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
+
+    <servlet>
+
+        <servlet-name>BodyServlet</servlet-name>
+        <servlet-class>com.testblancco.controller.BodyServlet</servlet-class>
+
+        <init-param>
+            <param-name>testParam</param-name>
+            <param-value>75</param-value>
+        </init-param>
+        
+    </servlet>
+    
+    <servlet>
+        <servlet-name>Calculator</servlet-name>
+        <servlet-class>com.testblancco.controller.Calculator</servlet-class>
+
+        <init-param>
+            <param-name>defaultOperation</param-name>
+            <param-value>minus</param-value>
+        </init-param>
+
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Calculator</servlet-name>
+        <url-pattern>calculator</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>BodyServlet</servlet-name>
+        <url-pattern>BodyServlet</url-pattern>
+    </servlet-mapping>
+
+    <context-param>
+
+        <param-name>testContextParam</param-name>
+        <param-value>105</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>secondTestContextParam</param-name>
+        <param-value>8876</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>appName</param-name>
+        <param-value>testBlancco</param-value>
+    </context-param>
+
+    <session-config>
+        <session-timeout>15</session-timeout>
+    </session-config>
+
+
+    <filter>
+        <filter-name>TestFilter</filter-name>
+        <filter-class>com.testblancco.filter.TestFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>TestFilter</filter-name>
+        <servlet-name>BodyServlet</servlet-name>
+        <dispatcher>REQUEST</dispatcher>
+    </filter-mapping>
+
+
 </web-app>

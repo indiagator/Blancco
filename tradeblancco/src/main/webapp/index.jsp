@@ -9,6 +9,20 @@
 
 <body>
 
+<%
+    String errorMessage = (String)request.getAttribute("errormessage");
+     if(errorMessage == null)
+     {
+         errorMessage = "";
+     }
+
+     String errorMessage2 = (String)request.getAttribute("errormessage2");
+    if(errorMessage2 == null)
+    {
+        errorMessage2 = "";
+    }
+%>
+
 <h1>Welcome to Trade Blancco
 </h1>
 
@@ -16,7 +30,7 @@
 <br/>
 
 <div>
-    <form action="calculator" method="post">
+    <form action="LoginServlet" method="post">
 
         <label for="username">USERNAME:</label>
         <input type="text" id="username" name="username" ><br>
@@ -27,6 +41,26 @@
         <input type="submit" value="LOGIN">
 
     </form>
+
+    <div><span><%= errorMessage  %></span></div>
+
+</div>
+
+<div>
+    <form action="SignupServlet" method="post">
+
+        <label for="usernameSignup">USERNAME:</label>
+        <input type="text" id="usernameSignup" name="username" ><br>
+
+        <label for="passwordSignup">PASSWORD:</label>
+        <input type="password" id="passwordSignup" name="password" ><br><br>
+
+        <input type="submit" value="SIGNUP">
+
+    </form>
+
+    <div><span><%= errorMessage2  %></span></div>
+
 </div>
 
 

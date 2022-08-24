@@ -2,22 +2,19 @@ package com.tradeblancco.model;
 
 public class Credential {
 
-    private String username;
-    private String password;
+    private final String username; // key
+    private String password; // value
 
     public Credential(String username, String password)
     {
         this.username = username;
-        this.username = password;
+        this.password = password;
     }
 
     public String getUsername() {
         return username;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getPassword() {
         return password;

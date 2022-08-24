@@ -7,16 +7,15 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-@WebServlet(name = "LoginServlet", value = "/LoginServlet")
-public class LoginServlet extends HttpServlet {
+@WebServlet(name = "SignupServlet", value = "/SignupServlet")
+public class SignupServlet extends HttpServlet {
 
     private User user;
     private String username;
@@ -28,10 +27,11 @@ public class LoginServlet extends HttpServlet {
     BufferedReader in_credentials;
     BufferedReader in_userinfo;
 
-    List<Credential> credentialList;
+    BufferedWriter out_credentials;
+
+    Set<Credential> credentialList;
     List<User> users;
 
-    @Override
     public void init() throws ServletException {
         super.init();
 
@@ -57,12 +57,18 @@ public class LoginServlet extends HttpServlet {
         }
 
         try {
+            out_credentials = Files.newBufferedWriter(this.fileUsernamePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
             in_userinfo = Files.newBufferedReader(this.fileUserinfoPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        this.credentialList = new ArrayList<>();
+        this.credentialList = new HashSet<>();
         this.users = new ArrayList<>();
 
         try {
@@ -106,6 +112,7 @@ public class LoginServlet extends HttpServlet {
 
     }
 
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -117,54 +124,40 @@ public class LoginServlet extends HttpServlet {
         username = request.getParameter("username");
         password = request.getParameter("password");
 
+
         Optional<Credential> tempCredential;
         if(    (tempCredential =  credentialList.stream().filter(credential -> credential.getUsername().equals(username)).findAny()).isPresent() )
         {
-           if(tempCredential.get().getPassword().equals(password))
-           {
-               // User Authenticated |  Dispatch the User to the dashboard.jsp
+            //DIspatch to Landing Page | Request a new Username because Username Exists
 
-                user = (users.stream().filter(user -> user.getUsername().equals(username)).findAny()).get();
-                //request.setAttribute("userinfo",user);
-                HttpSession session =  request.getSession(true); // get the session object reference for this user | create new session object if one doesn't exist already
-                session.setAttribute("userinfo",user);
-
-                if( user.getType().equals("buyer"))
-                {
-                    RequestDispatcher view = request.getRequestDispatcher("buyerdashboard.jsp");
-                    view.forward(request,response);
-                }
-                else if(user.getType().equals("seller"))
-                {
-                    RequestDispatcher view = request.getRequestDispatcher("sellerdashboard.jsp");
-                    view.forward(request,response);
-
-                }
-                else if(   user.getType().equals("admin")  )
-               {
-                   RequestDispatcher view = request.getRequestDispatcher("dashboard.jsp");
-                   view.forward(request,response);
-               }
-
-           }
-           else
-           { // If username is valid but password is incorrect | Dispatch the User back to the Landing Page
-
-               request.setAttribute("errormessage","Incorrect Password");
-
-               RequestDispatcher view = request.getRequestDispatcher("index.jsp");
-               view.forward(request,response);
-
-           }
-
+            request.setAttribute("errormessage2","Username Exists | Enter Another");
+            RequestDispatcher view = request.getRequestDispatcher("index.jsp");
+            view.forward(request,response);
         }
         else
         {
-            // If username is invalid | Dispatch the User back to the Landing Page
+            //Create a new User | Dispatch to Create Profile Page | Store the Credentials | Create a Session
 
-            request.setAttribute("errormessage","Incorrect Username");
-            RequestDispatcher view = request.getRequestDispatcher("index.jsp");
+            Credential credential = new Credential(username, password);
+            credentialList.add(credential) ;
+
+            credentialList.forEach(credential1 -> {
+                try {
+                    out_credentials.write(credential1.getUsername()+","+credential1.getPassword()+"\n");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            out_credentials.flush();
+            //out_credentials.close();
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute("usercredential",credential);
+
+            RequestDispatcher view = request.getRequestDispatcher("updateprofile.jsp");
             view.forward(request,response);
+
 
 
         }
