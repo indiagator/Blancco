@@ -1,0 +1,42 @@
+
+<html>
+<head>
+  <title>Update Profile</title>
+</head>
+<body>
+
+
+<h1>Please Update Your Profile</h1>
+
+<div>
+
+  <form action="updateprofile" method="post">
+
+    <label for="fullname">USERNAME:</label>
+    <input type="text" id="fullname" name="fullname" ><br>
+
+    <label for="phonenumber">PHONENUMBER:</label>
+    <input type="text" id="phonenumber" name="phonenumber" ><br><br>
+
+    <label for="type">TYPE:</label>
+    <input type="text" id="type" name="type" ><br><br>
+
+    <input type="submit" value="SAVE">
+
+  </form>
+
+  <p th:text="'Credential: ' + ${credentialjson} + '!'" />
+
+
+</div>
+
+<div>
+  <form action="LogoutServlet" method="get">
+    <input type="submit" value="LOGOUT">
+  </form>
+</div>
+
+
+
+</body>
+</html>

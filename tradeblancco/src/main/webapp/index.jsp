@@ -5,9 +5,12 @@
 
 <head>
     <title>JSP - Hello World</title>
+
+    <script type="text/javascript" src="scripts/landingpage.js"></script>
+
 </head>
 
-<body>
+<body onload="init()">
 
 <%
     String errorMessage = (String)request.getAttribute("errormessage");

@@ -67,7 +67,12 @@
         <filter-name>TestFilter</filter-name>
         <servlet-name>BodyServlet</servlet-name>
         <dispatcher>REQUEST</dispatcher>
+        <dispatcher>FORWARD</dispatcher>
+        <dispatcher>INCLUDE</dispatcher>
+        <dispatcher>ERROR</dispatcher>
     </filter-mapping>
+
+
 
 
 </web-app>

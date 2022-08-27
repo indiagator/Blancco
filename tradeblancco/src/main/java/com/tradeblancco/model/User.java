@@ -44,4 +44,26 @@ public class User {
     public String getUsername() {
         return username;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+
+        User user = (User) o;
+
+        if (!getUsername().equals(user.getUsername())) return false;
+        if (!getFullname().equals(user.getFullname())) return false;
+        if (!getPhonenumber().equals(user.getPhonenumber())) return false;
+        return getType().equals(user.getType());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getUsername().hashCode();
+        result = 31 * result + getFullname().hashCode();
+        result = 31 * result + getPhonenumber().hashCode();
+        result = 31 * result + getType().hashCode();
+        return result;
+    }
 }

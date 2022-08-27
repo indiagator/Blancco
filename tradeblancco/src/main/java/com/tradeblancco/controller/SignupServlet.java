@@ -9,6 +9,7 @@ import javax.servlet.annotation.*;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,7 +28,7 @@ public class SignupServlet extends HttpServlet {
     BufferedReader in_credentials;
     BufferedReader in_userinfo;
 
-    BufferedWriter out_credentials;
+    BufferedWriter out_credentials = null;
 
     Set<Credential> credentialList;
     List<User> users;
@@ -56,11 +57,7 @@ public class SignupServlet extends HttpServlet {
             throw new RuntimeException(e);
         }
 
-        try {
-            out_credentials = Files.newBufferedWriter(this.fileUsernamePath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
 
         try {
             in_userinfo = Files.newBufferedReader(this.fileUserinfoPath);
@@ -82,6 +79,8 @@ public class SignupServlet extends HttpServlet {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+
     }
 
     public void parseCredentials() throws IOException {
@@ -136,14 +135,20 @@ public class SignupServlet extends HttpServlet {
         }
         else
         {
+
+            try {
+                out_credentials = Files.newBufferedWriter(this.fileUsernamePath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             //Create a new User | Dispatch to Create Profile Page | Store the Credentials | Create a Session
 
             Credential credential = new Credential(username, password);
-            credentialList.add(credential) ;
+            this.credentialList.add(credential);
 
             credentialList.forEach(credential1 -> {
                 try {
-                    out_credentials.write(credential1.getUsername()+","+credential1.getPassword()+"\n");
+                    out_credentials.append(credential1.getUsername()+","+credential1.getPassword()+"\n");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -157,8 +162,6 @@ public class SignupServlet extends HttpServlet {
 
             RequestDispatcher view = request.getRequestDispatcher("updateprofile.jsp");
             view.forward(request,response);
-
-
 
         }
 

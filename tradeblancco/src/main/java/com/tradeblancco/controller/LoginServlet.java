@@ -8,6 +8,7 @@ import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,9 +19,11 @@ import java.util.Optional;
 @WebServlet(name = "LoginServlet", value = "/LoginServlet")
 public class LoginServlet extends HttpServlet {
 
-    private User user;
+    private Optional<User> user;
     private String username;
     private String password;
+
+    private  HttpSession session;
 
     Path fileUsernamePath;
     Path fileUserinfoPath;
@@ -38,6 +41,7 @@ public class LoginServlet extends HttpServlet {
         this.username = "no value provided";
         this.password = "no value provided";
         this.user = null;
+        this.session = null;
 
         Path p1 = Paths.get("D:\\SOftware Dev and Training Material\\Blancco\\tradeblancco\\src\\main\\resources\\data\\credentials.csv");
         //String pathString = p1.toString();
@@ -109,6 +113,16 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+        String filterParam = (String) request.getAttribute("filterParam");
+
+        response.setContentType("text/html");
+
+        PrintWriter out = response.getWriter();
+        out.println(filterParam);
+
+        out.flush();
+        out.close();
+
     }
 
     @Override
@@ -124,27 +138,50 @@ public class LoginServlet extends HttpServlet {
            {
                // User Authenticated |  Dispatch the User to the dashboard.jsp
 
-                user = (users.stream().filter(user -> user.getUsername().equals(username)).findAny()).get();
-                //request.setAttribute("userinfo",user);
-                HttpSession session =  request.getSession(true); // get the session object reference for this user | create new session object if one doesn't exist already
-                session.setAttribute("userinfo",user);
+               // tempUser =  users.stream().filter(user -> user.getUsername().equals(username)).findAny() ;
 
-                if( user.getType().equals("buyer"))
-                {
-                    RequestDispatcher view = request.getRequestDispatcher("buyerdashboard.jsp");
-                    view.forward(request,response);
-                }
-                else if(user.getType().equals("seller"))
-                {
-                    RequestDispatcher view = request.getRequestDispatcher("sellerdashboard.jsp");
-                    view.forward(request,response);
-
-                }
-                else if(   user.getType().equals("admin")  )
+               if(   (this.user = (users.stream().filter(user -> user.getUsername().equals(username)).findAny()) ).isPresent()  )
                {
-                   RequestDispatcher view = request.getRequestDispatcher("dashboard.jsp");
-                   view.forward(request,response);
+
+                   //user = (users.stream().filter(user -> user.getUsername().equals(username)).findAny()).get();
+                   //request.setAttribute("userinfo",user);
+
+                  this.session =  request.getSession(true); // get the session object reference for this user | create new session object if one doesn't exist already
+
+                   session.setAttribute("userinfo",user.get());
+                   session.setAttribute("usercredential",tempCredential);
+
+                   if( user.get().getType().equals("buyer"))
+                   {
+                       RequestDispatcher view = request.getRequestDispatcher("buyerdashboard.jsp");
+                       view.forward(request,response);
+                   }
+                   else if(user.get().getType().equals("seller"))
+                   {
+                       RequestDispatcher view = request.getRequestDispatcher("sellerdashboard.jsp");
+                       view.forward(request,response);
+
+                   }
+                   else if(   user.get().getType().equals("admin")  )
+                   {
+                       RequestDispatcher view = request.getRequestDispatcher("dashboard.jsp");
+                       view.forward(request,response);
+                   }
+
                }
+               else
+               {
+                   //Dispatch to Update Profile jsp after setting session info with user credentials
+                    this.session = request.getSession(true); // retreive the session object
+                    session.setAttribute("usercredential",tempCredential.get());
+                    session.setAttribute("userinfo",null);
+
+
+                    RequestDispatcher view = request.getRequestDispatcher("updateprofile.jsp");
+                    view.forward(request,response);
+
+               }
+
 
            }
            else

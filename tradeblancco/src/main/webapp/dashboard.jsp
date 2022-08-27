@@ -15,9 +15,20 @@
 </head>
 
 <body>
+
+<%  boolean authorized =  ((User)request.getSession(false).getAttribute("userinfo")).getType().equals("admin");%>
+
 <div>
     <h1>Dashboard</h1>
-    <p>Welcome <%= ((User)request.getSession(false).getAttribute("userinfo")).getFullname() %></p>
+    <p>Welcome <%= ((User)request.getSession(false).getAttribute("userinfo")).getFullname() %> <span><%= authorized%></span></p>
+</div>
+
+
+
+<div>
+<form action="LogoutServlet" method="get">
+    <input type="submit" value="LOGOUT">
+</form>
 </div>
 
 </body>
