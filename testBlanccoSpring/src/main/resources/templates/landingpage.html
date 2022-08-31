@@ -3,11 +3,23 @@
 <head>
     <title>Getting Started: Serving Web Content</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <script type="text/javascript" th:src="@{/scripts/landingpage.js}"></script>
+
+    <script th:inline="javascript">
+        var appName = [[${appName}]];
+        document.getElementById("testButton").addEventListener("click", showName);
+    </script>
+
 </head>
 
-<body>
+<body th:onload="init()">
+
 <p th:text="'Hello, ' + ${name} + '!'" />
 <p th:text="'appName, ' + ${appName} + '!'" />
+
+<button id="testButton" type="button">Click</button>
+
 </body>
 
 </html>
